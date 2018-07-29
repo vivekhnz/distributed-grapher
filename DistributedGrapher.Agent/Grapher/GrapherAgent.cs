@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Threading;
 using DistributedGrapher.Agent.Core;
 using DistributedGrapher.Shared.Grapher.Models;
 
 namespace DistributedGrapher.Agent.Grapher
 {
-    public class GrapherAgent : JobAgent<GrapherQueue, GrapherQueueConfig>
+    public class GrapherAgent : JobAgent<GrapherQueue, GrapherQueueConfig, GrapherJob>
     {
         private string formula;
 
@@ -18,6 +19,12 @@ namespace DistributedGrapher.Agent.Grapher
         {
             this.formula = config.Formula;
             Console.WriteLine($"Formula: {config.Formula}");
+        }
+
+        protected override void RunJob(GrapherJob job)
+        {
+            Console.WriteLine($"y = {formula.Replace("x", job.X.ToString())}");
+            Thread.Sleep(1000);
         }
     }
 }

@@ -4,7 +4,7 @@ namespace DistributedGrapher.Shared.Grapher.Models
 {
     public class GrapherQueueConfig
     {
-        public string Formula { get; private set; }
+        public string Formula;
 
         public GrapherQueueConfig(string formula)
         {

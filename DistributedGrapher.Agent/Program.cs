@@ -9,7 +9,7 @@ namespace DistributedGrapher.Agent
         {
             Console.WriteLine("Starting agent...");
 
-            var agent = new GrapherAgent("http://localhost:5000", 1);
+            var agent = new GrapherAgent("http://localhost:5000", 2);
             agent.Run();
         }
     }

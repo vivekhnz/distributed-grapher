@@ -21,9 +21,9 @@ namespace DistributedGrapher.Hub.Controllers
             jobs = new JobRepository();
             queues = new List<GrapherQueue>
             {
-                new GrapherQueue(1, "x"),
-                new GrapherQueue(2, "x+1"),
-                new GrapherQueue(3, "2x+3")
+                new GrapherQueue(0, "x"),
+                new GrapherQueue(1, "x+1"),
+                new GrapherQueue(2, "(2*x)+3")
             };
         }
 
@@ -46,6 +46,20 @@ namespace DistributedGrapher.Hub.Controllers
         public GrapherJob GetNextJob(int id)
         {
             return jobs.GetNextJob(id);
+        }
+
+        // GET api/queues/5/results
+        [HttpGet("{queueId}/results")]
+        public Dictionary<decimal, decimal> GetResults(int queueId)
+        {
+            return jobs.GetResults(queueId);
+        }
+
+        // PUT api/queues/5/results/7
+        [HttpPut("{queueId}/results/{jobId}")]
+        public void SaveResult(int queueId, int jobId, [FromBody] decimal result)
+        {
+            jobs.SaveResult(queueId, jobId, result);
         }
     }
 }

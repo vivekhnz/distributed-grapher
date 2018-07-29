@@ -5,9 +5,9 @@ namespace DistributedGrapher.Shared.Grapher.Models
 {
     public class GrapherJob : Job
     {
-        public int X;
+        public decimal X;
 
-        public GrapherJob(int id, int x)
+        public GrapherJob(int id, decimal x)
         {
             Id = id;
             X = x;

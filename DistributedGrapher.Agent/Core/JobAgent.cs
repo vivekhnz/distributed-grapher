@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text;
 using System.Threading;
 using DistributedGrapher.Shared.Core.Models;
 using Newtonsoft.Json;
 
 namespace DistributedGrapher.Agent.Core
 {
-    public abstract class JobAgent<TQueue, TQueueConfig, TJob>
+    public abstract class JobAgent<TQueue, TQueueConfig, TJob, TResult>
         where TQueue : JobQueue<TQueueConfig>
         where TQueueConfig : class
         where TJob : Job
     {
         private static readonly string GetQueueEndpoint = "/api/queues/{0}";
         private static readonly string GetNextJobEndpoint = "/api/queues/{0}/next";
+        private static readonly string SaveResultEndpoint = "/api/queues/{0}/results/{1}";
 
         private readonly string hubBaseUri;
         private readonly int queueId;
@@ -53,7 +55,11 @@ namespace DistributedGrapher.Agent.Core
                     continue;
                 }
 
-                RunJob(job);
+                Console.WriteLine($"Executing job {job.Id}...");
+                var result = RunJob(job);
+
+                Console.WriteLine($"Reporting result for job {job.Id}...");
+                SaveResult(job.Id, result);
             }
         }
 
@@ -64,10 +70,10 @@ namespace DistributedGrapher.Agent.Core
             {
                 try
                 {
-                    var request = client.GetAsync(getQueueUri).Result;
-                    if (request.IsSuccessStatusCode)
+                    var response = client.GetAsync(getQueueUri).Result;
+                    if (response.IsSuccessStatusCode)
                     {
-                        string json = request.Content.ReadAsStringAsync().Result;
+                        string json = response.Content.ReadAsStringAsync().Result;
                         var queue = JsonConvert.DeserializeObject<TQueue>(json);
                         return queue.Configuration;
                     }
@@ -88,10 +94,10 @@ namespace DistributedGrapher.Agent.Core
             {
                 try
                 {
-                    var request = client.GetAsync(getJobUri).Result;
-                    if (request.IsSuccessStatusCode)
+                    var response = client.GetAsync(getJobUri).Result;
+                    if (response.IsSuccessStatusCode)
                     {
-                        string json = request.Content.ReadAsStringAsync().Result;
+                        string json = response.Content.ReadAsStringAsync().Result;
                         return JsonConvert.DeserializeObject<TJob>(json);
                     }
                     return null;
@@ -104,7 +110,26 @@ namespace DistributedGrapher.Agent.Core
             }
         }
 
+        private void SaveResult(int jobId, TResult result)
+        {
+            var saveResultUri = $"{hubBaseUri}{string.Format(SaveResultEndpoint, queueId, jobId)}";
+            using (var client = new HttpClient())
+            {
+                try
+                {
+                    var json = JsonConvert.SerializeObject(result);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = client.PutAsync(saveResultUri, content).Result;
+                }
+                catch (Exception)
+                {
+                    // couldn't reach the server
+                    return;
+                }
+            }
+        }
+
         protected abstract void ApplyConfiguration(TQueueConfig config);
-        protected abstract void RunJob(TJob job);
+        protected abstract TResult RunJob(TJob job);
     }
 }
